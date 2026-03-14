@@ -3,23 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <title>Диагностика Mini App</title>
-    <style>
-        body { font-family: Arial; padding: 20px; text-align: center; }
-        .good { color: green; font-weight: bold; }
-        .bad { color: red; font-weight: bold; }
-    </style>
+    <title>Авторизация для бота</title>
 </head>
 <body>
-    <h3>Диагностика авторизации</h3>
-    <div id="info">Загрузка...</div>
+    <h3>Подождите, идёт авторизация...</h3>
+    <p>Это окно закроется автоматически.</p>
 
     <script>
-        const infoDiv = document.getElementById('info');
-        
-        if (!window.Telegram || !window.Telegram.WebApp) {
-            infoDiv.innerHTML = '<p class="bad">❌ Telegram WebApp не доступен. Откройте через кнопку в боте.</p>';
-        } else {
+        (function() {
+            if (!window.Telegram || !window.Telegram.WebApp) {
+                document.body.innerHTML = '<p style="color:red">❌ Ошибка: запустите через Telegram.</p>';
+                return;
+            }
+
             const tg = window.Telegram.WebApp;
             tg.ready();
             tg.expand();
@@ -27,29 +23,32 @@
             const initData = tg.initData;
 
             if (!initData) {
-                infoDiv.innerHTML = '<p class="bad">❌ initData пуста. Убедитесь, что вы открыли через кнопку в боте.</p>';
-            } else {
-                infoDiv.innerHTML = '<p class="good">✅ initData получена!</p>' +
-                                   '<p>Длина: ' + initData.length + ' символов.</p>';
-                // Покажем первые 50 символов для проверки
-                infoDiv.innerHTML += '<p>Начало: <code>' + initData.substring(0, 50) + '...</code></p>';
-                
-                // Попробуем извлечь имя пользователя
-                try {
-                    const params = new URLSearchParams(initData);
-                    const userStr = params.get('user');
-                    if (userStr) {
-                        const user = JSON.parse(userStr);
-                        infoDiv.innerHTML += '<p>👤 Привет, ' + user.first_name + '!</p>';
-                    }
-                } catch (e) {
-                    // игнорируем
-                }
-                
-                // Кнопка закрытия
-                infoDiv.innerHTML += '<br><button onclick="Telegram.WebApp.close()">Закрыть</button>';
+                document.body.innerHTML = '<p style="color:red">❌ Ошибка: нет данных от Telegram.</p>';
+                return;
             }
-        }
+
+            // ⬇️⬇️⬇️ ВОТ ЭТА СТРОКА — её нужно заменить на твой адрес ngrok ⬇️⬇️⬇️
+            const serverUrl = 'https://kenny-interpenetrant-impalpably.ngrok-free.dev';
+
+            fetch(serverUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ initData: initData })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.ok) {
+                    document.body.innerHTML = '<h3 style="color:green">✅ Успешно!</h3><p>Теперь можно вернуться в чат и использовать /list.</p>';
+                    tg.close();
+                } else {
+                    document.body.innerHTML = '<h3 style="color:red">❌ Ошибка</h3><p>Не удалось подтвердить личность.</p>';
+                }
+            })
+            .catch(error => {
+                document.body.innerHTML = '<p style="color:red">❌ Ошибка соединения с сервером.</p>';
+                console.error(error);
+            });
+        })();
     </script>
 </body>
 </html>
