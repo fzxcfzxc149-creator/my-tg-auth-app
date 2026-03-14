@@ -31,10 +31,13 @@
             const serverUrl = 'https://kenny-interpenetrant-impalpably.ngrok-free.dev';
 
             fetch(serverUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ initData: initData })
-            })
+    method: 'POST',
+    headers: { 
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true'   // ← добавляем эту строку
+    },
+    body: JSON.stringify({ initData: initData })
+})
             .then(response => response.json())
             .then(data => {
                 if (data.ok) {
