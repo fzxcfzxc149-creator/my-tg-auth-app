@@ -3,64 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>Диагностика Mini App</title>
     <style>
         body { font-family: Arial; padding: 20px; text-align: center; }
-        .success { color: green; }
-        .error { color: red; }
+        .good { color: green; font-weight: bold; }
+        .bad { color: red; font-weight: bold; }
     </style>
-    <title>Диагностика Mini App</title>
 </head>
 <body>
     <h3>Диагностика авторизации</h3>
-    <div id="status">Загрузка...</div>
+    <div id="info">Загрузка...</div>
 
     <script>
-        (function() {
-            const statusDiv = document.getElementById('status');
+        const infoDiv = document.getElementById('info');
+        
+        if (!window.Telegram || !window.Telegram.WebApp) {
+            infoDiv.innerHTML = '<p class="bad">❌ Telegram WebApp не доступен. Откройте через кнопку в боте.</p>';
+        } else {
+            const tg = window.Telegram.WebApp;
+            tg.ready();
+            tg.expand();
 
-            try {
-                if (!window.Telegram || !window.Telegram.WebApp) {
-                    statusDiv.innerHTML = '<p class="error">❌ Telegram WebApp не доступен. Откройте через Telegram.</p>';
-                    return;
-                }
+            const initData = tg.initData;
 
-                const tg = window.Telegram.WebApp;
-                tg.ready();
-                tg.expand();
-
-                const initData = tg.initData;
-
-                if (!initData) {
-                    statusDiv.innerHTML = '<p class="error">❌ initData пуста. Убедитесь, что открыли через кнопку в боте.</p>';
-                    return;
-                }
-
-                // Показываем, что данные получены
-                statusDiv.innerHTML = `<p class="success">✅ initData получена!</p>
-                                       <p>Длина: ${initData.length} символов</p>
-                                       <p>Первые 100 символов: <code>${initData.substring(0, 100)}...</code></p>`;
-
-                // Дополнительно покажем информацию о пользователе, если она есть в initData
+            if (!initData) {
+                infoDiv.innerHTML = '<p class="bad">❌ initData пуста. Убедитесь, что вы открыли через кнопку в боте.</p>';
+            } else {
+                infoDiv.innerHTML = '<p class="good">✅ initData получена!</p>' +
+                                   '<p>Длина: ' + initData.length + ' символов.</p>';
+                // Покажем первые 50 символов для проверки
+                infoDiv.innerHTML += '<p>Начало: <code>' + initData.substring(0, 50) + '...</code></p>';
+                
+                // Попробуем извлечь имя пользователя
                 try {
                     const params = new URLSearchParams(initData);
                     const userStr = params.get('user');
                     if (userStr) {
                         const user = JSON.parse(userStr);
-                        statusDiv.innerHTML += `<p>👤 Пользователь: ${user.first_name} (id: ${user.id})</p>`;
-                    } else {
-                        statusDiv.innerHTML += `<p>👤 Информация о пользователе отсутствует в initData.</p>`;
+                        infoDiv.innerHTML += '<p>👤 Привет, ' + user.first_name + '!</p>';
                     }
                 } catch (e) {
-                    statusDiv.innerHTML += `<p>⚠️ Не удалось разобрать данные пользователя.</p>`;
+                    // игнорируем
                 }
-
-                // Кнопка для закрытия (опционально)
-                statusDiv.innerHTML += `<br><button onclick="Telegram.WebApp.close()">Закрыть</button>`;
-
-            } catch (e) {
-                statusDiv.innerHTML = `<p class="error">❌ Ошибка скрипта: ${e.message}</p>`;
+                
+                // Кнопка закрытия
+                infoDiv.innerHTML += '<br><button onclick="Telegram.WebApp.close()">Закрыть</button>';
             }
-        })();
+        }
     </script>
 </body>
 </html>
