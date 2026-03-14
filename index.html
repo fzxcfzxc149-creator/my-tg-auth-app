@@ -13,7 +13,7 @@
         // Проверяем, запущено ли приложение внутри Telegram
         if (window.Telegram?.WebApp) {
             const tg = window.Telegram.WebApp;
-            tg.ready();      // правильный метод
+            tg.ready();
             tg.expand();
 
             const initData = tg.initData;
@@ -22,7 +22,7 @@
                 document.body.innerHTML = '<p>Ошибка: не удалось получить данные от Telegram.</p>';
             } else {
                 // Здесь позже нужно будет заменить адрес на свой ngrok
-                fetch('https://твой-сервер.com/verify', {
+                fetch('https://ngrok-cpp.watson.app/verify', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ initData: initData })
