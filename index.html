@@ -3,46 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <title>Авторизация для бота</title>
+    <title>Диагностика Mini App</title>
 </head>
 <body>
-    <h3>Подождите, идёт авторизация...</h3>
-    <p>Это окно закроется автоматически.</p>
+    <h3>Диагностика авторизации</h3>
+    <div id="status">Загрузка...</div>
 
     <script>
-        // Проверяем, запущено ли приложение внутри Telegram
-        if (window.Telegram?.WebApp) {
+        const statusDiv = document.getElementById('status');
+
+        // Проверяем, доступен ли Telegram WebApp
+        if (window.Telegram && window.Telegram.WebApp) {
             const tg = window.Telegram.WebApp;
             tg.ready();
             tg.expand();
 
             const initData = tg.initData;
 
-            if (!initData) {
-                document.body.innerHTML = '<p>Ошибка: не удалось получить данные от Telegram.</p>';
+            if (initData) {
+                statusDiv.innerHTML = '<p style="color:green">✅ initData получена! Длина: ' + initData.length + ' символов.</p>' +
+                                      '<p>Первые 50 символов: ' + initData.substring(0, 50) + '...</p>';
+                // Здесь позже будем отправлять на сервер
             } else {
-                // Здесь позже нужно будет заменить адрес на свой ngrok
-                fetch('https://ngrok-cpp.watson.app/verify', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ initData: initData })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.ok) {
-                        document.body.innerHTML = '<h3>✅ Успешно!</h3><p>Теперь можно вернуться в чат с ботом и использовать /list.</p>';
-                        tg.close();
-                    } else {
-                        document.body.innerHTML = '<h3>❌ Ошибка</h3><p>Не удалось подтвердить личность.</p>';
-                    }
-                })
-                .catch(error => {
-                    document.body.innerHTML = '<p>Ошибка соединения с сервером.</p>';
-                    console.error(error);
-                });
+                statusDiv.innerHTML = '<p style="color:red">❌ initData пуста. Убедитесь, что вы открыли страницу через кнопку в боте, а не просто по ссылке.</p>';
             }
         } else {
-            document.body.innerHTML = '<p>Это приложение должно быть открыто через Telegram.</p>';
+            statusDiv.innerHTML = '<p style="color:red">❌ Telegram WebApp не доступен. Откройте страницу через Telegram.</p>';
         }
     </script>
 </body>
