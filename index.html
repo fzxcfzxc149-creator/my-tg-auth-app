@@ -10,9 +10,10 @@
     <p>Это окно закроется автоматически.</p>
 
     <script>
+        // Проверяем, запущено ли приложение внутри Telegram
         if (window.Telegram?.WebApp) {
             const tg = window.Telegram.WebApp;
-            tg.ready();
+            tg.ready();      // правильный метод
             tg.expand();
 
             const initData = tg.initData;
@@ -20,6 +21,7 @@
             if (!initData) {
                 document.body.innerHTML = '<p>Ошибка: не удалось получить данные от Telegram.</p>';
             } else {
+                // Здесь позже нужно будет заменить адрес на свой ngrok
                 fetch('https://твой-сервер.com/verify', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -28,7 +30,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.ok) {
-                        document.body.innerHTML = '<h3>✅ Успешно!</h3><p>Теперь можешь вернуться в чат с ботом и использовать /list.</p>';
+                        document.body.innerHTML = '<h3>✅ Успешно!</h3><p>Теперь можно вернуться в чат с ботом и использовать /list.</p>';
                         tg.close();
                     } else {
                         document.body.innerHTML = '<h3>❌ Ошибка</h3><p>Не удалось подтвердить личность.</p>';
