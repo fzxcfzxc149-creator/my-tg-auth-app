@@ -27,17 +27,17 @@
                 return;
             }
 
-            // ⬇️⬇️⬇️ ВОТ ЭТА СТРОКА — её нужно заменить на твой адрес ngrok ⬇️⬇️⬇️
+            // ⚠️ Убедись, что этот адрес совпадает с твоим текущим ngrok-адресом!
             const serverUrl = 'https://kenny-interpenetrant-impalpably.ngrok-free.dev/verify';
 
             fetch(serverUrl, {
-    method: 'POST',
-    headers: { 
-        'Content-Type': 'application/json',
-        'ngrok-skip-browser-warning': 'true'   // ← добавляем эту строку
-    },
-    body: JSON.stringify({ initData: initData })
-})
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'ngrok-skip-browser-warning': 'true'
+                },
+                body: JSON.stringify({ initData: initData })
+            })
             .then(response => response.json())
             .then(data => {
                 if (data.ok) {
