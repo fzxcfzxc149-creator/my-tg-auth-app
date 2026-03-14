@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <!-- Подключаем библиотеку Telegram, она даёт доступ к данным пользователя -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>Авторизация для бота</title>
+</head>
+<body>
+    <h3>Подождите, идёт авторизация...</h3>
+    <p>Это окно закроется автоматически.</p>
+
+    <script>
+        // Проверяем, что мы запущены внутри Telegram
+        if (window.Telegram?.WebApp) {
+            const tg = window.Telegram.WebApp;
+            
+            // Сообщаем Telegram, что приложение готово и его можно развернуть на весь экран
+            tg.ready();
+            tg.expand();
+
+            // Получаем сырые данные для проверки (initData)
+            // Именно эту строку будет проверять наш Python-сервер
+            const initData = tg.initData;
+
+            if (!initData) {
+                document.body.innerHTML = '<p>Ошибка: не удалось получить данные от Telegram.</p>';
+            } else {
+                // Отправляем эти данные на твой сервер (Python)
+                // ВАЖНО: замени адрес ниже на реальный адрес, где будет работать твой бот
+                fetch('https://твой-сервер.com/verify', { // <-- СЮДА ВСТАВИШЬ СВОЙ АДРЕС ПОТОМ
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ initData: initData })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.ok) {
+                        // Если сервер подтвердил, что пользователь настоящий
+                        document.body.innerHTML = '<h3>✅ Успешно!</h3><p>Теперь можешь вернуться в чат с ботом и использовать /list.</p>';
+                        // Можно закрыть приложение
+                        tg.close();
+                    } else {
+                        document.body.innerHTML = '<h3>❌ Ошибка</h3><p>Не удалось подтвердить личность.</p>';
+                    }
+                })
+                .catch(error => {
+                    document.body.innerHTML = '<p>Ошибка соединения с сервером.</p>';
+                    console.error(error);
+                });
+            }
+        } else {
+            // Если открыть страницу просто в браузере
+            document.body.innerHTML = '<p>Это приложение должно быть открыто через Telegram.</p>';
+        }
+    </script>
+</body>
+</html>
