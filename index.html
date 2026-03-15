@@ -3,16 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <title>Авторизация для бота</title>
+    <style>
+        body { font-family: Arial; padding: 20px; text-align: center; }
+        input, button { font-size: 16px; margin: 5px; padding: 8px; width: 80%; max-width: 300px; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
 </head>
 <body>
-    <h3>Подождите, идёт авторизация...</h3>
-    <p>Это окно закроется автоматически.</p>
+    <div id="app">
+        <h3>Авторизация в Telegram</h3>
+        <div id="step1">
+            <p>Введите номер телефона:</p>
+            <input type="text" id="phone" placeholder="+79123456789" value="">
+            <br>
+            <button id="sendCodeBtn">Отправить код</button>
+            <div id="message"></div>
+        </div>
+        <div id="step2" style="display:none;">
+            <p>Введите код из Telegram:</p>
+            <input type="text" id="code" placeholder="12345">
+            <br>
+            <button id="verifyCodeBtn">Подтвердить</button>
+            <div id="message2"></div>
+        </div>
+    </div>
 
     <script>
         (function() {
-            if (!window.Telegram || !window.Telegram.WebApp) {
-                document.body.innerHTML = '<p style="color:red">❌ Ошибка: запустите через Telegram.</p>';
+            if (!window.Telegram?.WebApp) {
+                document.body.innerHTML = '<p style="color:red">❌ Запустите через Telegram</p>';
                 return;
             }
 
@@ -21,37 +41,73 @@
             tg.expand();
 
             const initData = tg.initData;
-
             if (!initData) {
-                document.body.innerHTML = '<p style="color:red">❌ Ошибка: нет данных от Telegram.</p>';
+                document.body.innerHTML = '<p style="color:red">❌ Нет данных от Telegram</p>';
                 return;
             }
 
-            // ⚠️ Убедись, что этот адрес совпадает с твоим текущим ngrok-адресом!
-            const serverUrl = 'https://strenuously-accessible-koala.cloudpub.ru/verify';
+            const serverUrl = 'https://strenuously-accessible-koala.cloudpub.ru'; // без /verify
 
-            fetch(serverUrl, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'ngrok-skip-browser-warning': 'true',
-                    'bypass-tunnel-reminder': 'true' 
-                },
-                body: JSON.stringify({ initData: initData })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.ok) {
-                    document.body.innerHTML = '<h3 style="color:green">✅ Успешно!</h3><p>Теперь можно вернуться в чат и использовать /list.</p>';
-                    tg.close();
-                } else {
-                    document.body.innerHTML = '<h3 style="color:red">❌ Ошибка</h3><p>Не удалось подтвердить личность.</p>';
+            // Элементы
+            const step1 = document.getElementById('step1');
+            const step2 = document.getElementById('step2');
+            const phoneInput = document.getElementById('phone');
+            const codeInput = document.getElementById('code');
+            const sendBtn = document.getElementById('sendCodeBtn');
+            const verifyBtn = document.getElementById('verifyCodeBtn');
+            const msgDiv = document.getElementById('message');
+            const msg2Div = document.getElementById('message2');
+
+            sendBtn.onclick = async () => {
+                const phone = phoneInput.value.trim();
+                if (!phone) {
+                    msgDiv.innerHTML = '<span class="error">Введите номер</span>';
+                    return;
                 }
-            })
-            .catch(error => {
-                document.body.innerHTML = '<p style="color:red">❌ Ошибка соединения с сервером.</p>';
-                console.error(error);
-            });
+                msgDiv.innerHTML = 'Отправка...';
+                try {
+                    const res = await fetch(serverUrl + '/send_code', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ initData, phone })
+                    });
+                    const data = await res.json();
+                    if (data.ok) {
+                        msgDiv.innerHTML = '<span class="success">Код отправлен</span>';
+                        step1.style.display = 'none';
+                        step2.style.display = 'block';
+                    } else {
+                        msgDiv.innerHTML = `<span class="error">Ошибка: ${data.error}</span>`;
+                    }
+                } catch (e) {
+                    msgDiv.innerHTML = `<span class="error">Ошибка соединения</span>`;
+                }
+            };
+
+            verifyBtn.onclick = async () => {
+                const code = codeInput.value.trim();
+                if (!code) {
+                    msg2Div.innerHTML = '<span class="error">Введите код</span>';
+                    return;
+                }
+                msg2Div.innerHTML = 'Проверка...';
+                try {
+                    const res = await fetch(serverUrl + '/verify_code', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ initData, code })
+                    });
+                    const data = await res.json();
+                    if (data.ok) {
+                        msg2Div.innerHTML = '<span class="success">✅ Успешно!</span>';
+                        setTimeout(() => tg.close(), 1500);
+                    } else {
+                        msg2Div.innerHTML = `<span class="error">Ошибка: ${data.error}</span>`;
+                    }
+                } catch (e) {
+                    msg2Div.innerHTML = `<span class="error">Ошибка соединения</span>`;
+                }
+            };
         })();
     </script>
 </body>
